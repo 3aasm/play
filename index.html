@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>لعبة كشف اللص - الإصدار الاحترافي</title>
+    
+    <!-- خط تجوال من جوجل -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- إعدادات Tailwind -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Tajawal', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#8b5cf6', // Violet 500
+                        secondary: '#ec4899', // Pink 500
+                        dark: '#0f172a', // Slate 900
+                        card: '#1e293b', // Slate 800
+                        accent: '#06b6d4', // Cyan 500
+                    },
+                    animation: {
+                        'bounce-slow': 'bounce 3s infinite',
+                        'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'fade-in': 'fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+                        'slide-up': 'slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'scale(0.95)' },
+                            '100%': { opacity: '1', transform: 'scale(1)' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #020617 0%, #1e1b4b 50%, #312e81 100%);
+            color: white;
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: pan-y;
+        }
+        
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .input-glass {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        .input-glass:focus {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: #8b5cf6;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+        }
+
+        .btn-modern {
+            background: linear-gradient(to right, #8b5cf6, #ec4899);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+        }
+        .btn-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
+        }
+        .btn-modern:active { transform: scale(0.98); }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.2s ease;
+        }
+        .option-btn:active { transform: scale(0.95); }
+        .option-btn.selected {
+            background: rgba(139, 92, 246, 0.2);
+            border-color: #8b5cf6;
+        }
+
+        /* Swipe Card Styles */
+        .swipe-card {
+            background: linear-gradient(180deg, rgba(30, 41, 59, 1) 0%, rgba(15, 23, 42, 1) 100%);
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+            border-top: 1px solid rgba(255,255,255,0.15);
+        }
+        .swipe-indicator {
+            width: 40px;
+            height: 4px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 99px;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center p-4 selection:bg-pink-500 selection:text-white">
+
+    <main id="app" class="w-full max-w-md mx-auto relative min-h-[85vh] flex flex-col justify-center">
+        
+        <!-- Header -->
+        <header class="text-center mb-8 animate-fade-in z-10">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-primary to-secondary mb-4 shadow-lg shadow-purple-500/20">
+                <span class="text-3xl">🕵️</span>
+            </div>
+            <h1 class="text-4xl font-black text-white mb-2 tracking-tight">
+                كشف <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">اللص</span>
+            </h1>
+            <div class="flex items-center justify-center gap-2 text-gray-400 text-xs font-medium uppercase tracking-widest">
+                <span class="w-1.5 h-1.5 rounded-full bg-green-400"></span>
+                اونلاين
+            </div>
+        </header>
+
+        <!-- 1. شاشة الإعداد الرئيسية (Main Menu) -->
+        <div id="screen-main-menu" class="glass-panel rounded-3xl p-6 animate-fade-in relative overflow-hidden">
+            <!-- زخرفة خلفية -->
+            <div class="absolute -top-20 -right-20 w-40 h-40 bg-purple-600/20 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-20 -left-20 w-40 h-40 bg-pink-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="relative z-10 space-y-6">
+                <!-- عدد اللاعبين -->
+                <div>
+                    <div class="flex justify-between items-center mb-3">
+                        <label class="text-sm font-bold text-gray-300">عدد اللاعبين</label>
+                        <span id="player-count-display" class="text-xl font-bold text-primary bg-primary/10 px-3 py-1 rounded-lg">4</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button onclick="adjustCount(-1)" class="w-12 h-12 rounded-2xl bg-card border border-gray-700 hover:border-gray-500 text-white text-xl flex items-center justify-center transition-colors">-</button>
+                        <div class="flex-1 h-2 bg-gray-800 rounded-full overflow-hidden">
+                            <div id="count-bar" class="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-300" style="width: 20%"></div>
+                        </div>
+                        <button onclick="adjustCount(1)" class="w-12 h-12 rounded-2xl bg-card border border-gray-700 hover:border-gray-500 text-white text-xl flex items-center justify-center transition-colors">+</button>
+                    </div>
+                </div>
+
+                <!-- الفئات -->
+                <div>
+                    <label class="block text-sm font-bold text-gray-300 mb-3">اختر الفئة</label>
+                    <div class="relative">
+                        <select id="category-select" class="w-full bg-card text-white rounded-2xl p-4 border border-gray-700 focus:border-primary outline-none appearance-none text-right font-medium cursor-pointer">
+                            <!-- JS fills this -->
+                        </select>
+                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent"></div>
+
+                <!-- أزرار التحكم -->
+                <div class="space-y-3">
+                    <button onclick="goToNameInput()" class="btn-modern w-full py-4 rounded-2xl text-white font-bold text-lg flex items-center justify-center gap-2 group">
+                        <span>إدخال الأسماء والبدء</span>
+                        <span class="group-hover:translate-x-[-4px] transition-transform">←</span>
+                    </button>
+                    
+                    <button onclick="showLeaderboard()" class="w-full py-3 rounded-2xl bg-card border border-gray-700 text-gray-300 font-medium hover:bg-gray-800 transition-colors flex items-center justify-center gap-2">
+                        <span>🏆 لوحة الصدارة</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. شاشة إدخال الأسماء (Player Names) -->
+        <div id="screen-names" class="hidden glass-panel rounded-3xl p-6 animate-fade-in">
+            <div class="flex items-center justify-between mb-6">
+                <button onclick="switchScreen('screen-names', 'screen-main-menu')" class="p-2 rounded-xl hover:bg-white/5 text-gray-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                </button>
+                <h2 class="text-xl font-bold">أسماء اللاعبين</h2>
+                <div class="w-10"></div> <!-- Spacer -->
+            </div>
+
+            <div id="names-inputs-container" class="space-y-3 max-h-[300px] overflow-y-auto pr-1 mb-6 custom-scrollbar">
+                <!-- سيتم توليد حقول الإدخال هنا -->
+            </div>
+
+            <button onclick="startGame()" class="btn-modern w-full py-4 rounded-2xl text-white font-bold text-lg shadow-lg">
+                🚀 انطلاق
+            </button>
+        </div>
+
+        <!-- 3. شاشة النقاط (Leaderboard) -->
+        <div id="screen-leaderboard" class="hidden glass-panel rounded-3xl p-6 animate-fade-in">
+             <div class="flex items-center justify-between mb-6">
+                <button onclick="switchScreen('screen-leaderboard', 'screen-main-menu')" class="p-2 rounded-xl hover:bg-white/5 text-gray-400">
+                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                </button>
+                <h2 class="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-600">لوحة الأبطال</h2>
+                <button onclick="resetScores()" class="p-2 rounded-xl hover:bg-red-500/10 text-red-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                </button>
+            </div>
+            
+            <div id="scoreboard-list" class="space-y-2 mb-4 max-h-[350px] overflow-y-auto">
+                <div class="text-center text-gray-500 py-10 flex flex-col items-center">
+                    <span class="text-4xl mb-2">💤</span>
+                    <p>لا توجد نقاط مسجلة بعد</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. حاوية الدور التفاعلي (Swipe Reveal) -->
+        <div id="turn-phase-container" class="hidden relative w-full h-[500px] rounded-3xl overflow-hidden border border-gray-700 shadow-2xl swipe-container bg-dark">
+            <!-- الطبقة الخلفية: المحتوى -->
+            <div id="layer-reveal" class="absolute inset-0 w-full h-full flex flex-col items-center justify-center p-6 z-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
+                <div id="role-icon" class="text-8xl mb-6 animate-bounce-slow drop-shadow-2xl"></div>
+                
+                <div class="text-center mb-8 relative">
+                    <h2 id="role-title" class="text-4xl font-black mb-2 tracking-tight"></h2>
+                    <p id="role-desc" class="text-gray-300 text-sm leading-relaxed max-w-[250px] mx-auto"></p>
+                </div>
+                
+                <div id="secret-word-container" class="my-2 p-6 bg-white/5 rounded-2xl w-full border border-white/10 backdrop-blur-md">
+                    <p class="text-xs text-gray-400 mb-2 uppercase tracking-widest text-center">كلمة السر</p>
+                    <p id="secret-word" class="text-4xl font-black text-center text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary"></p>
+                </div>
+                
+                <button onclick="confirmRole()" class="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-4 rounded-2xl mt-auto flex items-center justify-center gap-2 transition-colors border border-gray-700">
+                    <span>إخفاء الدور</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.707-10.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L9.414 11H13a1 1 0 100-2H9.414l1.293-1.293z" clip-rule="evenodd" /></svg>
+                </button>
+            </div>
+
+            <!-- الطبقة الأمامية: الغطاء -->
+            <div id="layer-pass" class="absolute inset-0 w-full h-full swipe-card z-10 flex flex-col items-center justify-center p-8 transition-transform duration-300 cursor-grab">
+                <div class="absolute top-3 w-full flex justify-center opacity-50"><div class="swipe-indicator"></div></div>
+                
+                <div class="w-24 h-24 rounded-full bg-gradient-to-tr from-gray-700 to-gray-800 flex items-center justify-center mb-8 shadow-inner border border-gray-600">
+                    <span class="text-4xl animate-pulse">🔒</span>
+                </div>
+                
+                <div class="text-center space-y-2 mb-12">
+                    <p class="text-gray-400 text-sm font-medium uppercase tracking-wider">الدور على</p>
+                    <h2 id="next-player-name" class="text-5xl font-black text-white drop-shadow-lg">اللاعب 1</h2>
+                </div>
+                
+                <div class="absolute bottom-12 flex flex-col items-center text-gray-500 animate-bounce">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" /></svg>
+                    <p class="text-xs font-bold uppercase tracking-[0.2em]">اسحب للكشف</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. شاشة النقاش -->
+        <div id="screen-discussion" class="hidden animate-fade-in">
+            <div class="glass-panel rounded-3xl p-8 text-center relative overflow-hidden">
+                <!-- مؤشر دائري للخلفية -->
+                <div class="absolute top-0 left-0 w-full h-1 bg-gray-800">
+                    <div id="timer-bar" class="h-full bg-primary transition-all duration-1000 ease-linear" style="width: 100%"></div>
+                </div>
+
+                <div class="mb-4 inline-block px-4 py-1 rounded-full bg-white/5 text-gray-400 text-xs border border-white/5">وقت التحقيق</div>
+                
+                <div id="timer" class="text-8xl font-black font-mono mb-8 text-white tabular-nums tracking-tighter drop-shadow-2xl">05:00</div>
+                
+                <div class="bg-card/50 rounded-2xl p-4 mb-8 border border-gray-700/50 flex flex-col items-center">
+                    <span class="text-gray-500 text-xs mb-1">موضوع النقاش</span>
+                    <span id="discussion-category" class="text-2xl font-bold text-accent"></span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <button onclick="toggleTimer()" id="timer-btn" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-4 rounded-2xl transition-colors">إيقاف ⏸</button>
+                    <button onclick="endDiscussion()" class="bg-red-500 hover:bg-red-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-red-500/20 transition-colors">تصويت 🗳</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. شاشة التصويت -->
+        <div id="screen-voting" class="hidden animate-fade-in">
+            <div class="glass-panel rounded-3xl p-6">
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl font-bold mb-2 text-white">من هو اللص؟</h2>
+                    <p class="text-gray-400 text-sm">
+                        الدور: <span id="voter-name" class="text-primary font-bold text-lg">اللاعب 1</span>
+                    </p>
+                </div>
+                <div id="voting-list" class="grid grid-cols-1 gap-3"></div>
+            </div>
+        </div>
+
+        <!-- 7. شاشة تحدي اللص (Thief Guess Challenge) -->
+        <div id="screen-thief-guess" class="hidden animate-fade-in">
+            <div class="glass-panel rounded-3xl p-6 border-red-500/30">
+                <div class="text-center mb-6">
+                    <div class="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                        <span class="text-4xl">🚨</span>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white mb-2">كشف اللص!</h2>
+                    <p class="text-gray-300 text-sm leading-relaxed">
+                        اللص هو <span id="thief-name-reveal" class="font-bold text-red-400 border-b border-red-400/50"></span>
+                        <br>
+                        لديك فرصة أخيرة للنجاة.. خمن الكلمة!
+                    </p>
+                </div>
+                
+                <div id="thief-options-list" class="grid grid-cols-2 gap-3">
+                    <!-- خيارات الكلمات -->
+                </div>
+                
+                <div class="mt-6 flex justify-center gap-4 text-xs font-bold text-gray-500">
+                    <div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500"></span> صح +10</div>
+                    <div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-yellow-500"></span> خطأ +5</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 8. شاشة النتائج -->
+        <div id="screen-result" class="hidden animate-fade-in text-center">
+            <div class="glass-panel rounded-3xl p-8 py-12 relative overflow-hidden flex flex-col items-center">
+                <!-- تأثيرات الخلفية -->
+                <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-primary/10 to-transparent pointer-events-none"></div>
+
+                <div id="result-icon" class="text-8xl mb-6 animate-bounce-slow drop-shadow-xl z-10">🏆</div>
+                
+                <h2 id="result-title" class="text-4xl font-black mb-4 text-white z-10"></h2>
+                <p id="result-message" class="text-gray-300 mb-8 px-2 z-10 leading-relaxed"></p>
+                
+                <!-- بطاقة توزيع النقاط -->
+                <div class="bg-card rounded-2xl p-5 mb-8 w-full border border-gray-700 z-10 shadow-lg">
+                    <h3 class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-4 border-b border-gray-700 pb-2">توزيع النقاط لهذه الجولة</h3>
+                    <div id="score-change-display" class="flex flex-col gap-3">
+                        <!-- JS fills this -->
+                    </div>
+                </div>
+
+                <button onclick="resetGame()" class="btn-modern w-full py-4 rounded-2xl text-white font-bold text-lg shadow-lg z-10">
+                    العودة للقائمة الرئيسية 🏠
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // --- Game Logic ---
+        const gameData = {
+            categories: [
+                { id: 'animals', name: '🦁 حيوانات', words: ['أسد', 'بطريق', 'زرافة', 'فيل', 'نمر', 'قطة', 'كلب', 'حوت', 'صقر', 'نسر', 'دب', 'كنغر', 'حصان', 'قرد', 'ثعلب'] },
+                { id: 'countries', name: '🌍 دول', words: ['مصر', 'السعودية', 'فرنسا', 'اليابان', 'البرازيل', 'إيطاليا', 'أمريكا', 'الصين', 'المغرب', 'الإمارات', 'ألمانيا', 'الهند', 'روسيا', 'كندا', 'إسبانيا'] },
+                { id: 'food', name: '🍕 طعام', words: ['بيتزا', 'سوشي', 'برجر', 'كشري', 'كبسة', 'شاورما', 'آيس كريم', 'فواكه', 'معكرونة', 'دجاج مقلي', 'سلطة', 'شوربة', 'ستيك', 'فلافل', 'مانجو'] },
+                { id: 'jobs', name: '💼 مهن', words: ['طبيب', 'مهندس', 'معلم', 'طيار', 'شرطي', 'نجار', 'مبرمج', 'طباخ', 'رسام', 'ممثل', 'رائد فضاء', 'مزارع', 'محامي', 'صحفي', 'ممرض'] },
+                { id: 'objects', name: '🏠 أدوات', words: ['ثلاجة', 'تلفاز', 'كنبة', 'سرير', 'مروحة', 'غسالة', 'مكواة', 'مصباح', 'طاولة', 'كرسي', 'مرآة', 'ساعة', 'كمبيوتر', 'قلم', 'كتاب'] },
+                { id: 'transport', name: '🚗 مواصلات', words: ['طائرة', 'قطار', 'سيارة', 'دراجة', 'قارب', 'حافلة', 'شاحنة', 'صاروخ', 'مترو', 'سفينة', 'تاكسي', 'هليكوبتر', 'تلفريك', 'سكوتر', 'غواصة'] },
+            ],
+            players: [], 
+            playerNames: [], // Stores custom names
+            playerCount: 4,
+            currentCategory: null,
+            currentWord: '',
+            thiefIndex: -1,
+            currentPlayerTurn: 0,
+            timerInterval: null,
+            timeLeft: 300,
+            isPaused: false,
+            votes: {},
+            votingPlayerIndex: 0,
+            scores: {} // Persist scores: { "Name": Score }
+        };
+
+        // --- Init ---
+        window.onload = () => {
+            const select = document.getElementById('category-select');
+            gameData.categories.forEach((cat, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.text = cat.name;
+                select.appendChild(option);
+            });
+            const randomOption = document.createElement('option');
+            randomOption.value = -1;
+            randomOption.text = '🎲 عشوائي';
+            select.prepend(randomOption);
+            select.value = -1;
+
+            initSwipeLogic();
+            updateCountBar();
+            loadScores();
+        };
+
+        // --- Name Input System ---
+        function goToNameInput() {
+            const container = document.getElementById('names-inputs-container');
+            container.innerHTML = '';
+            
+            // Generate inputs based on player count
+            for(let i=0; i<gameData.playerCount; i++) {
+                const div = document.createElement('div');
+                div.className = 'relative';
+                
+                const storedName = gameData.playerNames[i] || `اللاعب ${i+1}`;
+                
+                div.innerHTML = `
+                    <input type="text" id="input-name-${i}" value="${storedName}" 
+                        class="w-full input-glass text-white rounded-xl p-4 pl-10 focus:border-primary placeholder-gray-500 font-medium" 
+                        placeholder="اسم اللاعب ${i+1}" onclick="this.select()">
+                    <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-sm">#${i+1}</div>
+                `;
+                container.appendChild(div);
+            }
+            
+            switchScreen('screen-main-menu', 'screen-names');
+        }
+
+        // --- Score System ---
+        function loadScores() {
+            try {
+                const saved = localStorage.getItem('thiefGameScores');
+                if(saved) gameData.scores = JSON.parse(saved);
+            } catch(e) {}
+        }
+        
+        function saveScores() {
+            localStorage.setItem('thiefGameScores', JSON.stringify(gameData.scores));
+        }
+
+        function showLeaderboard() {
+            updateScoreboardUI();
+            switchScreen('screen-main-menu', 'screen-leaderboard');
+        }
+
+        function updateScoreboardUI() {
+            const list = document.getElementById('scoreboard-list');
+            list.innerHTML = '';
+            
+            // Get all unique names from scores + current default names if in game
+            const allNames = new Set([...Object.keys(gameData.scores), ...gameData.playerNames]);
+            const sortedPlayers = Array.from(allNames).map(name => ({
+                name: name,
+                score: gameData.scores[name] || 0
+            })).sort((a, b) => b.score - a.score);
+
+            if (sortedPlayers.length === 0) {
+                 list.innerHTML = `<div class="text-center text-gray-500 py-10 flex flex-col items-center"><span class="text-4xl mb-2">💤</span><p>لا توجد نقاط مسجلة بعد</p></div>`;
+                 return;
+            }
+
+            sortedPlayers.forEach((p, index) => {
+                const div = document.createElement('div');
+                div.className = 'flex justify-between items-center bg-card p-4 rounded-2xl border border-gray-700/50 hover:border-primary/50 transition-colors';
+                
+                let rankStyle = "bg-gray-700 text-gray-400";
+                if (index === 0) rankStyle = "bg-yellow-500 text-black shadow-lg shadow-yellow-500/20";
+                else if (index === 1) rankStyle = "bg-gray-300 text-black";
+                else if (index === 2) rankStyle = "bg-orange-700 text-white";
+
+                div.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="w-8 h-8 rounded-lg ${rankStyle} flex items-center justify-center font-bold text-sm">${index + 1}</span>
+                        <span class="text-white font-bold">${p.name}</span>
+                    </div>
+                    <span class="font-black text-xl text-primary">${p.score}</span>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function updateScore(playerName, points) {
+            if (!gameData.scores[playerName]) gameData.scores[playerName] = 0;
+            gameData.scores[playerName] += points;
+            saveScores();
+        }
+
+        function resetScores() {
+            if(confirm('هل تريد تصفير النقاط لجميع اللاعبين؟')) {
+                gameData.scores = {};
+                saveScores();
+                updateScoreboardUI();
+            }
+        }
+
+        // --- Main Game Flow ---
+        function adjustCount(amount) {
+            let newCount = gameData.playerCount + amount;
+            if (newCount >= 3 && newCount <= 20) {
+                gameData.playerCount = newCount;
+                document.getElementById('player-count-display').innerText = newCount;
+                updateCountBar();
+            }
+        }
+
+        function updateCountBar() {
+            // Min 3, Max 20
+            const percentage = ((gameData.playerCount - 3) / (20 - 3)) * 100;
+            document.getElementById('count-bar').style.width = `${percentage}%`;
+        }
+
+        function startGame() {
+            // Save Names
+            gameData.playerNames = [];
+            for(let i=0; i<gameData.playerCount; i++) {
+                const input = document.getElementById(`input-name-${i}`);
+                let name = input ? input.value.trim() : `اللاعب ${i+1}`;
+                if(!name) name = `اللاعب ${i+1}`;
+                gameData.playerNames.push(name);
+            }
+
+            // Init Game
+            const select = document.getElementById('category-select');
+            let catIndex = parseInt(select.value);
+            if (catIndex === -1) catIndex = Math.floor(Math.random() * gameData.categories.length);
+            
+            gameData.currentCategory = gameData.categories[catIndex];
+            gameData.currentWord = gameData.currentCategory.words[Math.floor(Math.random() * gameData.currentCategory.words.length)];
+            
+            gameData.players = gameData.playerNames.map((name, i) => ({
+                id: i,
+                name: name,
+                isThief: false
+            }));
+            
+            gameData.thiefIndex = Math.floor(Math.random() * gameData.playerCount);
+            gameData.players[gameData.thiefIndex].isThief = true;
+            gameData.currentPlayerTurn = 0;
+            
+            prepareTurnContent();
+            switchScreen('screen-names', 'turn-phase-container');
+        }
+
+        function prepareTurnContent() {
+            const player = gameData.players[gameData.currentPlayerTurn];
+            document.getElementById('next-player-name').innerText = player.name;
+            if (window.resetCardPosition) window.resetCardPosition();
+
+            const icon = document.getElementById('role-icon');
+            const title = document.getElementById('role-title');
+            const wordContainer = document.getElementById('secret-word-container');
+            const wordDisplay = document.getElementById('secret-word');
+            const desc = document.getElementById('role-desc');
+
+            if (player.isThief) {
+                icon.innerText = '🦹‍♂️';
+                title.innerText = 'أنت اللص!';
+                title.className = 'text-5xl font-black mb-2 text-red-500 drop-shadow-lg';
+                wordContainer.style.display = 'none';
+                desc.innerText = `مهمتك: اخدع الجميع! الفئة هي: ${gameData.currentCategory.name}`;
+            } else {
+                icon.innerText = '👮‍♂️';
+                title.innerText = 'أنت بريء';
+                title.className = 'text-5xl font-black mb-2 text-green-400 drop-shadow-lg';
+                wordContainer.style.display = 'block';
+                wordDisplay.innerText = gameData.currentWord;
+                desc.innerText = `اكتشف اللص ولكن لا تكشف كلمتك بوضوح!`;
+            }
+        }
+
+        function confirmRole() {
+            gameData.currentPlayerTurn++;
+            if (gameData.currentPlayerTurn < gameData.playerCount) {
+                window.resetCardPosition();
+                setTimeout(() => prepareTurnContent(), 300);
+            } else {
+                startDiscussion();
+            }
+        }
+
+        function startDiscussion() {
+            switchScreen('turn-phase-container', 'screen-discussion');
+            document.getElementById('discussion-category').innerText = gameData.currentCategory.name;
+            gameData.timeLeft = 300;
+            gameData.isPaused = false;
+            updateTimerDisplay();
+            clearInterval(gameData.timerInterval);
+            gameData.timerInterval = setInterval(() => {
+                if (!gameData.isPaused) {
+                    gameData.timeLeft--;
+                    updateTimerDisplay();
+                    if (gameData.timeLeft <= 0) endDiscussion();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const m = Math.floor(gameData.timeLeft / 60).toString().padStart(2, '0');
+            const s = (gameData.timeLeft % 60).toString().padStart(2, '0');
+            document.getElementById('timer').innerText = `${m}:${s}`;
+            
+            // Progress bar
+            const percent = (gameData.timeLeft / 300) * 100;
+            document.getElementById('timer-bar').style.width = `${percent}%`;
+
+            if (gameData.timeLeft < 30) {
+                document.getElementById('timer').classList.add('text-red-500', 'animate-pulse');
+                document.getElementById('timer-bar').classList.add('bg-red-500');
+            } else {
+                document.getElementById('timer').classList.remove('text-red-500', 'animate-pulse');
+                document.getElementById('timer-bar').classList.remove('bg-red-500');
+            }
+        }
+
+        function toggleTimer() {
+            gameData.isPaused = !gameData.isPaused;
+            const btn = document.getElementById('timer-btn');
+            if (gameData.isPaused) {
+                btn.innerText = 'استئناف ▶️';
+                btn.className = "bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-2xl transition-colors";
+            } else {
+                btn.innerText = 'إيقاف ⏸';
+                btn.className = "bg-gray-700 hover:bg-gray-600 text-white font-bold py-4 rounded-2xl transition-colors";
+            }
+        }
+
+        function endDiscussion() {
+            clearInterval(gameData.timerInterval);
+            gameData.votingPlayerIndex = 0;
+            gameData.votes = {};
+            gameData.players.forEach((_, i) => gameData.votes[i] = 0);
+            prepareVotingScreen();
+            switchScreen('screen-discussion', 'screen-voting');
+        }
+
+        function prepareVotingScreen() {
+            const voter = gameData.players[gameData.votingPlayerIndex];
+            document.getElementById('voter-name').innerText = voter.name;
+            const list = document.getElementById('voting-list');
+            list.innerHTML = '';
+            gameData.players.forEach((player, index) => {
+                if (index !== gameData.votingPlayerIndex) {
+                    const btn = document.createElement('button');
+                    btn.className = 'w-full bg-card hover:bg-gray-700 border border-gray-600 text-white font-bold text-lg py-4 px-4 rounded-2xl btn-press transition-all flex justify-between items-center group';
+                    btn.innerHTML = `
+                        <span>${player.name}</span>
+                        <span class="opacity-0 group-hover:opacity-100 transition-opacity">👈</span>
+                    `;
+                    btn.onclick = () => castVote(index);
+                    list.appendChild(btn);
+                }
+            });
+        }
+
+        function castVote(suspectIndex) {
+            gameData.votes[suspectIndex]++;
+            gameData.votingPlayerIndex++;
+            if (gameData.votingPlayerIndex < gameData.playerCount) prepareVotingScreen();
+            else processVotingResults();
+        }
+
+        function processVotingResults() {
+            let maxVotes = -1;
+            let accusedIndex = -1;
+            let isTie = false;
+
+            for (let i = 0; i < gameData.playerCount; i++) {
+                if (gameData.votes[i] > maxVotes) {
+                    maxVotes = gameData.votes[i];
+                    accusedIndex = i;
+                    isTie = false;
+                } else if (gameData.votes[i] === maxVotes) isTie = true;
+            }
+
+            if (isTie) {
+                endGame('thief_win_tie', null);
+            } else if (accusedIndex !== gameData.thiefIndex) {
+                endGame('thief_win_wrong_accusal', accusedIndex);
+            } else {
+                // Thief Caught! Go to Guessing Phase
+                startThiefGuessPhase();
+            }
+        }
+
+        // --- Thief Guessing Phase ---
+        function startThiefGuessPhase() {
+            switchScreen('screen-voting', 'screen-thief-guess');
+            document.getElementById('thief-name-reveal').innerText = gameData.players[gameData.thiefIndex].name;
+
+            const allWords = gameData.currentCategory.words.filter(w => w !== gameData.currentWord);
+            const shuffled = allWords.sort(() => 0.5 - Math.random()).slice(0, 5);
+            shuffled.push(gameData.currentWord);
+            const finalOptions = shuffled.sort(() => 0.5 - Math.random());
+
+            const list = document.getElementById('thief-options-list');
+            list.innerHTML = '';
+
+            finalOptions.forEach(word => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn bg-card hover:bg-primary/20 hover:border-primary text-white font-medium py-4 px-2 rounded-xl text-base btn-press';
+                btn.innerText = word;
+                btn.onclick = () => handleThiefGuess(word);
+                list.appendChild(btn);
+            });
+        }
+
+        function handleThiefGuess(word) {
+            if (word === gameData.currentWord) {
+                endGame('thief_escape_guess', null);
+            } else {
+                endGame('innocents_win_thief_fail', null);
+            }
+        }
+
+        // --- End Game & Scoring Logic (UPDATED) ---
+        function endGame(scenario, extraData) {
+            const thiefName = gameData.players[gameData.thiefIndex].name;
+            const resultIcon = document.getElementById('result-icon');
+            const resultTitle = document.getElementById('result-title');
+            const resultMsg = document.getElementById('result-message');
+            const scoreDisplay = document.getElementById('score-change-display');
+            
+            let msg = '';
+            let scoreHTML = '';
+
+            // Rule 1: Winner gets 10, Loser gets 0
+            // Rule 2: Thief specific guess rule (Right +10, Wrong +5 & Innocents +10)
+
+            if (scenario === 'thief_win_tie') {
+                // Thief Wins (Tie)
+                resultIcon.innerText = '🎭';
+                resultTitle.innerText = 'فاز اللص!';
+                resultTitle.className = 'text-4xl font-black mb-4 text-red-500 z-10';
+                msg = `حدث تعادل في الأصوات! نجا اللص (${thiefName}) بفعلته.`;
+                
+                updateScore(thiefName, 10);
+                scoreHTML = `<div class="flex justify-between items-center text-sm"><span class="text-white">${thiefName}</span><span class="text-green-400 font-bold">+10 نقاط</span></div>`;
+            
+            } else if (scenario === 'thief_win_wrong_accusal') {
+                // Thief Wins (Wrong Accusation)
+                const accusedName = gameData.players[extraData].name;
+                resultIcon.innerText = '😈';
+                resultTitle.innerText = 'فاز اللص!';
+                resultTitle.className = 'text-4xl font-black mb-4 text-red-500 z-10';
+                msg = `ظلمتم (${accusedName})! اللص الحقيقي هو (${thiefName}).`;
+                
+                updateScore(thiefName, 10);
+                scoreHTML = `<div class="flex justify-between items-center text-sm"><span class="text-white">${thiefName}</span><span class="text-green-400 font-bold">+10 نقاط</span></div>`;
+
+            } else if (scenario === 'thief_escape_guess') {
+                // Thief Caught BUT Guessed Correctly
+                resultIcon.innerText = '🧠';
+                resultTitle.innerText = 'هروب ماكر!';
+                resultTitle.className = 'text-4xl font-black mb-4 text-orange-500 z-10';
+                msg = `كشفتم اللص (${thiefName})، لكنه عرف الكلمة السرية (${gameData.currentWord}) وفاز!`;
+                
+                updateScore(thiefName, 10);
+                scoreHTML = `<div class="flex justify-between items-center text-sm"><span class="text-white">${thiefName}</span><span class="text-green-400 font-bold">+10 نقاط (تخمين صحيح)</span></div>`;
+
+            } else if (scenario === 'innocents_win_thief_fail') {
+                // Innocents Win (Thief caught AND failed guess)
+                resultIcon.innerText = '👮‍♂️';
+                resultTitle.innerText = 'فاز الأبرياء!';
+                resultTitle.className = 'text-4xl font-black mb-4 text-green-400 z-10';
+                msg = `تم القبض على اللص (${thiefName}) وفشل في معرفة الكلمة السرية!`;
+                
+                // Innocents (Winners) +10
+                // Thief (Failed guess) +5 (Consolation per user request)
+                scoreHTML = ``;
+                gameData.players.forEach(p => {
+                    if (!p.isThief) {
+                        updateScore(p.name, 10);
+                        scoreHTML += `<div class="flex justify-between items-center text-sm mb-1"><span class="text-white">${p.name}</span><span class="text-green-400 font-bold">+10</span></div>`;
+                    }
+                });
+                updateScore(thiefName, 5);
+                scoreHTML += `<div class="flex justify-between items-center text-sm border-t border-gray-700 pt-1 mt-1"><span class="text-gray-400">${thiefName} (اللص)</span><span class="text-yellow-500 font-bold">+5 (ترضية)</span></div>`;
+            }
+
+            resultMsg.innerText = msg;
+            scoreDisplay.innerHTML = scoreHTML;
+            
+            if (scenario === 'thief_escape_guess' || scenario === 'innocents_win_thief_fail') {
+                switchScreen('screen-thief-guess', 'screen-result');
+            } else {
+                switchScreen('screen-voting', 'screen-result');
+            }
+        }
+
+        function resetGame() {
+            switchScreen('screen-result', 'screen-main-menu');
+        }
+
+        // --- Helper ---
+        function switchScreen(hideId, showId) {
+            document.getElementById(hideId).classList.add('hidden');
+            const showEl = document.getElementById(showId);
+            showEl.classList.remove('hidden');
+            showEl.classList.remove('animate-fade-in');
+            void showEl.offsetWidth;
+            showEl.classList.add('animate-fade-in');
+        }
+
+        function initSwipeLogic() {
+            const card = document.getElementById('layer-pass');
+            const container = document.getElementById('turn-phase-container');
+            let startY = 0;
+            let currentTranslate = 0;
+            let isDragging = false;
+            let containerHeight = 0;
+
+            const startDrag = (y) => {
+                startY = y;
+                isDragging = true;
+                card.style.transition = 'none';
+                containerHeight = container.offsetHeight;
+            };
+
+            const moveDrag = (y) => {
+                if (!isDragging) return;
+                const deltaY = y - startY;
+                if (deltaY < 0) {
+                    currentTranslate = deltaY;
+                    card.style.transform = `translateY(${currentTranslate}px)`;
+                }
+            };
+
+            const endDrag = () => {
+                if (!isDragging) return;
+                isDragging = false;
+                card.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
+                if (Math.abs(currentTranslate) > containerHeight * 0.35) {
+                    card.style.transform = `translateY(-120%)`;
+                } else {
+                    window.resetCardPosition();
+                }
+            };
+
+            card.addEventListener('touchstart', e => startDrag(e.touches[0].clientY));
+            card.addEventListener('touchmove', e => moveDrag(e.touches[0].clientY));
+            card.addEventListener('touchend', endDrag);
+            card.addEventListener('mousedown', e => { startDrag(e.clientY); card.style.cursor = 'grabbing'; });
+            window.addEventListener('mousemove', e => moveDrag(e.clientY));
+            window.addEventListener('mouseup', () => { endDrag(); card.style.cursor = 'grab'; });
+
+            window.resetCardPosition = () => {
+                currentTranslate = 0;
+                card.style.transform = `translateY(0)`;
+                card.style.cursor = 'grab';
+            };
+        }
+    </script>
+</body>
+</html>
