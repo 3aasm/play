@@ -2,7 +2,10 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0a0b10">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>3D Factory Environment - FPS</title>
     <style>
         :root {
@@ -3327,12 +3330,24 @@ document.getElementById('lobby-name-tag').style.display = 'none';
 
         window.enterGame = function() {
             // طلب إخفاء وحجز مؤشر الفأرة داخل اللعبة (Pointer Lock API)
-            document.body.requestPointerLock = document.body.requestPointerLock || document.body.mozRequestPointerLock;
-            document.body.requestPointerLock();
             if (!isMobile) {
                 document.body.requestPointerLock = document.body.requestPointerLock || document.body.mozRequestPointerLock;
                 document.body.requestPointerLock();
             } else {
+                // Fullscreen and Landscape for Mobile
+                const elem = document.documentElement;
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen().then(() => {
+                        if (screen.orientation && screen.orientation.lock) {
+                            screen.orientation.lock('landscape').catch(err => console.log("Orientation lock failed: ", err));
+                        }
+                    }).catch(err => console.log("Fullscreen failed: ", err));
+                } else if (elem.webkitRequestFullscreen) { /* Safari */
+                    elem.webkitRequestFullscreen();
+                } else if (elem.msRequestFullscreen) { /* IE11 */
+                    elem.msRequestFullscreen();
+                }
+                
                 document.getElementById('mobile-controls').style.display = 'block';
             }
             gameStarted = true;
