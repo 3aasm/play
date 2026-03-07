@@ -1347,79 +1347,115 @@
             touch-action: none;
         }
 
+        #btn-mobile-pause {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 2px solid var(--primary);
+            border-radius: 12px;
+            color: var(--primary);
+            font-size: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            pointer-events: auto;
+            backdrop-filter: blur(5px);
+            z-index: 60;
+        }
+
         #joystick-zone {
             position: absolute;
-            bottom: 50px;
-            left: 50px;
-            width: 150px;
-            height: 150px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            bottom: 40px;
+            left: 40px;
+            width: 160px;
+            height: 160px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, rgba(0, 0, 0, 0.3) 100%);
+            border: 2px solid rgba(255, 255, 255, 0.15);
             border-radius: 50%;
             pointer-events: auto;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
         }
 
         #joystick-knob {
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 60px;
-            height: 60px;
-            background: rgba(255, 204, 0, 0.5);
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, var(--primary) 0%, #cc9900 100%);
             border-radius: 50%;
             transform: translate(-50%, -50%);
             pointer-events: none;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5), inset 0 0 10px rgba(255, 255, 255, 0.5);
+            border: 2px solid rgba(0, 0, 0, 0.2);
         }
 
         #touch-look-zone {
             position: absolute;
             top: 0;
             right: 0;
-            width: 50%;
+            width: 60%;
             height: 100%;
             pointer-events: auto;
         }
 
         #mobile-actions {
             position: absolute;
-            bottom: 60px;
+            bottom: 40px;
             right: 40px;
             display: flex;
-            gap: 20px;
+            gap: 25px;
             pointer-events: auto;
             align-items: flex-end;
         }
 
         .mobile-btn {
-            width: 80px;
-            height: 80px;
-            background: rgba(255, 255, 255, 0.1);
+            width: 85px;
+            height: 85px;
+            background: rgba(0, 0, 0, 0.4);
             border: 2px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
             color: white;
-            font-size: 30px;
+            font-size: 32px;
             display: flex;
             justify-content: center;
             align-items: center;
             user-select: none;
             -webkit-user-select: none;
-            transition: transform 0.1s;
+            transition: all 0.15s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            backdrop-filter: blur(5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
         }
 
         .mobile-btn:active {
-            background: rgba(255, 204, 0, 0.4);
-            transform: scale(0.95);
+            transform: scale(0.9);
+            border-color: var(--primary);
+            background: rgba(255, 204, 0, 0.2);
+        }
+
+        #btn-mobile-jump {
+            border-color: #00ccff;
+        }
+
+        #btn-mobile-aim {
+            border-color: #00ffaa;
+            font-size: 28px;
         }
 
         #btn-mobile-shoot {
-            width: 100px;
-            height: 100px;
-            background: rgba(255, 50, 50, 0.2);
-            border-color: rgba(255, 50, 50, 0.5);
+            width: 110px;
+            height: 110px;
+            background: rgba(255, 0, 0, 0.15);
+            border-color: #ff3333;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.2);
         }
 
         #btn-mobile-shoot:active {
-            background: rgba(255, 50, 50, 0.5);
+            background: rgba(255, 0, 0, 0.4);
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.4);
         }
 
         /* --- Global Chat --- */
@@ -1569,13 +1605,15 @@
 
     <!-- Mobile Controls -->
     <div id="mobile-controls">
+        <button id="btn-mobile-pause">⏸</button>
         <div id="joystick-zone">
             <div id="joystick-knob"></div>
         </div>
         <div id="touch-look-zone"></div>
         <div id="mobile-actions">
             <button id="btn-mobile-jump" class="mobile-btn">🦘</button>
-            <button id="btn-mobile-shoot" class="mobile-btn">🔥</button>
+            <button id="btn-mobile-aim" class="mobile-btn">🎯</button>
+            <button id="btn-mobile-shoot" class="mobile-btn">🔫</button>
         </div>
     </div>
 
@@ -2522,6 +2560,7 @@
         let isMobile = false;
         let joystickVector = { x: 0, y: 0 };
         let touchLookLast = { x: 0, y: 0 };
+        let isAiming = false;
 
         // --- إعدادات التخصيص (Locker Settings) ---
         const defaultCharacterSettings = {
@@ -2687,11 +2726,13 @@
             // Joystick Logic
             joyZone.addEventListener('touchstart', (e) => {
                 e.preventDefault();
-                const touch = e.changedTouches[0];
-                joyTouchId = touch.identifier;
-                const rect = joyZone.getBoundingClientRect();
-                joyCenter = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
-                updateJoystick(touch);
+                if (e.changedTouches.length > 0) {
+                    const touch = e.changedTouches[0];
+                    joyTouchId = touch.identifier;
+                    const rect = joyZone.getBoundingClientRect();
+                    joyCenter = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+                    updateJoystick(touch);
+                }
             }, { passive: false });
 
             joyZone.addEventListener('touchmove', (e) => {
@@ -2728,7 +2769,6 @@
                     dy = (dy / dist) * maxDist;
                 }
                 joyKnob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
-                // تطبيع المتجه للحركة (X: يمين/يسار، Y: أمام/خلف)
                 joystickVector.x = dx / maxDist;
                 joystickVector.y = dy / maxDist;
             }
@@ -2754,8 +2794,10 @@
                         touchLookLast = { x: t.clientX, y: t.clientY };
 
                         if (gameActive) {
-                            player.rotation.y -= dx * mobileSettings.sensitivity;
-                            pitchObject.rotation.x -= dy * mobileSettings.sensitivity;
+                            // تقليل الحساسية عند التصويب
+                            const sens = isAiming ? (mobileSettings.sensitivity * 0.4) : mobileSettings.sensitivity;
+                            player.rotation.y -= dx * sens;
+                            pitchObject.rotation.x -= dy * sens;
                             pitchObject.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitchObject.rotation.x));
                         }
                         break;
@@ -2763,13 +2805,56 @@
                 }
             }, { passive: false });
 
+            lookZone.addEventListener('touchend', (e) => {
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    if (e.changedTouches[i].identifier === lookTouchId) {
+                        lookTouchId = null;
+                        break;
+                    }
+                }
+            });
+
             // Action Buttons
             const btnJump = document.getElementById('btn-mobile-jump');
-            btnJump.addEventListener('touchstart', (e) => { e.preventDefault(); if (canJump) { playerVelocityY = jumpForce; canJump = false; } });
+            btnJump.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (canJump && gameActive) {
+                    playerVelocityY = jumpForce;
+                    canJump = false;
+                }
+            });
 
             const btnShoot = document.getElementById('btn-mobile-shoot');
-            btnShoot.addEventListener('touchstart', (e) => { e.preventDefault(); isMouseDown = true; });
+            btnShoot.addEventListener('touchstart', (e) => { e.preventDefault(); if (gameActive) isMouseDown = true; });
             btnShoot.addEventListener('touchend', (e) => { e.preventDefault(); isMouseDown = false; });
+
+            const btnAim = document.getElementById('btn-mobile-aim');
+            btnAim.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (!gameActive) return;
+                isAiming = !isAiming;
+
+                // تأثير التصويب (Zoom)
+                if (isAiming) {
+                    camera.fov = 40;
+                    camera.updateProjectionMatrix();
+                    btnAim.style.background = "rgba(0, 255, 170, 0.4)";
+                } else {
+                    camera.fov = 75;
+                    camera.updateProjectionMatrix();
+                    btnAim.style.background = "rgba(0, 0, 0, 0.4)";
+                }
+            });
+
+            const btnPause = document.getElementById('btn-mobile-pause');
+            btnPause.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (gameActive) {
+                    gameActive = false;
+                    document.getElementById('pause-menu').style.display = 'flex';
+                    document.getElementById('mobile-controls').style.display = 'none';
+                }
+            });
 
             // تطبيق الإعدادات الأولية
             applyMobileSettings();
@@ -2778,8 +2863,9 @@
         function applyMobileSettings() {
             if (!isMobile) return;
             const controls = document.getElementById('mobile-controls');
-            controls.style.opacity = mobileSettings.opacity;
+            if (controls) controls.style.opacity = mobileSettings.opacity;
 
+            // تطبيق الحجم على جميع الأزرار (بما في ذلك التصويب والقفز والإطلاق والستارت)
             const btns = document.querySelectorAll('.mobile-btn');
             btns.forEach(btn => {
                 // تغيير الحجم (الافتراضي 80px)
@@ -4292,6 +4378,16 @@
 
         function gameOver() {
             gameActive = false;
+
+            // إعادة ضبط التصويب للجوال
+            if (isMobile && isAiming) {
+                isAiming = false;
+                camera.fov = 75;
+                camera.updateProjectionMatrix();
+                const btnAim = document.getElementById('btn-mobile-aim');
+                if (btnAim) btnAim.style.background = "rgba(0, 0, 0, 0.4)";
+            }
+
             document.exitPointerLock();
             document.getElementById('game-over-screen').style.display = 'flex';
             document.getElementById('ui-layer').style.display = 'none';
@@ -5916,6 +6012,16 @@
         gameOver = function () {
             if (isOnline) {
                 gameActive = false;
+
+                // إعادة ضبط التصويب للجوال عند الموت في الأونلاين
+                if (isMobile && isAiming) {
+                    isAiming = false;
+                    camera.fov = 75;
+                    camera.updateProjectionMatrix();
+                    const btnAim = document.getElementById('btn-mobile-aim');
+                    if (btnAim) btnAim.style.background = "rgba(0, 0, 0, 0.4)";
+                }
+
                 if (!isMobile) document.exitPointerLock();
                 else document.getElementById('mobile-controls').style.display = 'none';
 
